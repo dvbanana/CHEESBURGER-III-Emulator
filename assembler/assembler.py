@@ -59,33 +59,33 @@ MNEMONIC_ALIASES = {
 
 def reg(bits):
     if not bits.lower().startswith("r"):
-        raise Exception("Expected register")
+        exit("Expected register")
 
     n = int(bits[1:])
     if n < 0 or n > 7:
-        raise Exception("Register out of range")
+        exit("Register out of range")
 
     return format(n, "03b")
 
 
 def ram(bits):
     if not bits.lower().startswith("r"):
-        raise Exception("Expected RAM register")
+        exit("Expected RAM register")
 
     n = int(bits[1:])
     if n < 0 or n > 255:
-        raise Exception("RAM register out of range")
+        exit("RAM register out of range")
 
     return format(n, "08b")
 
 
 def port(bits):
     if not bits.lower().startswith("p"):
-        raise Exception("Expected port")
+        exit("Expected port")
 
     n = int(bits[1:])
     if n < 0 or n > 7:
-        raise Exception("Port out of range")
+        exit("Port out of range")
 
     return format(n, "03b")
 
@@ -93,7 +93,7 @@ def port(bits):
 def imm(bits):
     n = int(bits)
     if n < 0 or n > 255:
-        raise Exception("Immediate out of range")
+        exit("Immediate out of range")
 
     return format(n, "08b")
 
@@ -101,7 +101,7 @@ def imm(bits):
 def addr(n):
     n = int(n)
     if n < 0 or n > 1023:
-        raise Exception("Address out of range")
+        exit("Address out of range")
 
     return format(n, "010b")
 
@@ -120,7 +120,7 @@ def parse_source_line(line):
     if parts[0].startswith("."):
         label = parts.pop(0)[1:]
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", label):
-            raise Exception(f"Invalid label name: .{label}")
+            exit(f"Invalid label name: .{label}")
 
     if not parts:
         return label, None
@@ -130,7 +130,7 @@ def parse_source_line(line):
     if "." in parts[0]:
         mnemonic, target = parts[0].split(".", 1)
         if not mnemonic or not target:
-            raise Exception(f"Invalid label reference: {parts[0]}")
+            exit(f"Invalid label reference: {parts[0]}")
         parts = [mnemonic, target] + parts[1:]
 
     parts[0] = parts[0].upper()
@@ -143,37 +143,37 @@ def assemble_parts(parts, labels, line_num):
     mnemonic = parts[0]
 
     if mnemonic not in OPCODES:
-        raise Exception(f"Unknown instruction {mnemonic}")
+        exit(f"Unknown instruction {mnemonic}")
 
     opcode, fmt = OPCODES[mnemonic]
 
     if fmt == "NONE":
         if len(parts) != 1:
-            raise Exception(f"{mnemonic} takes no operands")
+            exit(f"{mnemonic} takes no operands")
         operands = "00000000000"
 
     elif fmt == "RA":
         if len(parts) != 2:
-            raise Exception(f"{mnemonic} expects 1 operand")
+            exit(f"{mnemonic} expects 1 operand")
         a = reg(parts[1])
         operands = "000" + a + "00000"
 
     elif fmt == "RAD":
         if len(parts) != 3:
-            raise Exception(f"{mnemonic} expects 2 operands")
+            exit(f"{mnemonic} expects 2 operands")
         a = reg(parts[1])
         d = reg(parts[2])
         operands = a + "000" + d + "00"
 
     elif fmt == "RB":
         if len(parts) != 2:
-            raise Exception(f"{mnemonic} expects 1 operand")
+            exit(f"{mnemonic} expects 1 operand")
         b = reg(parts[1])
         operands = "000000" + b + "00"
 
     elif fmt == "RRR":
         if len(parts) != 4:
-            raise Exception(f"{mnemonic} expects 3 operands")
+            exit(f"{mnemonic} expects 3 operands")
         a = reg(parts[1])
         b = reg(parts[2])
         d = reg(parts[3])
@@ -181,13 +181,13 @@ def assemble_parts(parts, labels, line_num):
 
     elif fmt == "RI":
         if len(parts) != 3:
-            raise Exception(f"{mnemonic} expects 2 operands")
+            exit(f"{mnemonic} expects 2 operands")
         r = reg(parts[1])
         operands = r + imm(parts[2])
 
     elif fmt == "ADDR":
         if len(parts) != 2:
-            raise Exception(f"{mnemonic} expects 1 address or label")
+            exit(f"{mnemonic} expects 1 address or label")
         target = parts[1]
 
         if target in labels:
@@ -198,26 +198,26 @@ def assemble_parts(parts, labels, line_num):
                 # Preserve numeric-address support, adjusting for startup NOP.
                 target_address = int(target) + 1
             except ValueError:
-                raise Exception(f"Unknown label '{target}'")
+                exit(f"Unknown label '{target}'")
 
         operands = "0" + addr(target_address)
 
     elif fmt == "RRAM":
         if len(parts) != 3:
-            raise Exception(f"{mnemonic} expects 2 operands")
+            exit(f"{mnemonic} expects 2 operands")
         r = reg(parts[1])
         m = ram(parts[2])
         operands = r + m
 
     elif fmt == "RPORT":
         if len(parts) != 3:
-            raise Exception(f"{mnemonic} expects 2 operands")
+            exit(f"{mnemonic} expects 2 operands")
         r = reg(parts[1])
         p = port(parts[2])
         operands = r + p + "00000"
 
     else:
-        raise Exception(f"Unknown format for {mnemonic}")
+        exit(f"Unknown format for {mnemonic}")
 
     return opcode + operands
 
@@ -241,7 +241,7 @@ def assemble(assembly_filename, mc_filename):
 
             if label is not None:
                 if label in labels:
-                    raise Exception(f"Duplicate label '.{label}'")
+                    exit(f"Duplicate label '.{label}'")
                 labels[label] = instruction_address
 
             if parts is not None:
