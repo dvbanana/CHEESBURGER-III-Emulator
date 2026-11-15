@@ -11,7 +11,7 @@ public partial class Main : Node
 	[Export] private int programMemorySize = 2048;
 	[Export] private int ramSize = 256;
 	[Export] private int portCount = 16; //Subtracted from ram size to get size of port space
-	[Export] private int registerCount = 16;
+	[Export] private int registerCount = 8;
 	[Export] private int opcodeLength = 5;
 
 	[ExportCategory("References")]
@@ -143,29 +143,44 @@ public partial class Main : Node
 	private enum Operand : byte
 	{
 		NOP,
-		HLT,
+		IA,
+		IB,
 		ADD,
 		SUB,
+		XOR,
+		XNOR,
+		OR,
 		NOR,
 		AND,
-		XOR,
+		NAND,
 		RSH,
+		MTU,
+		MTL,
+		DIV,
+		MOD,
+		SQRT,
 		LDI,
 		ADI,
 		JMP,
-		BRH,
+		BIZ,
+		BNZ,
+		BIC,
+		BNC,
 		CAL,
-		RET,
+		RTN,
+		STR,
 		LOD,
-		STR
+		PST,
+		PLD,
+		HLT
 	}
 
 	private void ProcessOpcode(ushort instruction)
 	{
 		Operand opcode = (Operand)(instruction >> (16 - opcodeLength));
-		byte regA = (byte)((instruction & 0b111100000000) >> 8);
-		byte regB = (byte)((instruction & 0b11110000) >> 4);
-		byte regC = (byte)(instruction & 0b1111);
+		byte regA = (byte)((instruction & 0b011100000000) >> 8);
+		byte regB = (byte)((instruction & 0b011100000) >> 5);
+		byte regC = (byte)((instruction & 0b011100) >> 2);
 
 		byte immediate = (byte)(instruction & 0b11111111);
 
@@ -233,7 +248,7 @@ public partial class Main : Node
 			case Operand.JMP:
 				programCounter = address;
 				break;
-			case Operand.BRH:
+			case Operand.BIZ:
 				if ((cond == 0 && zeroFlag) || (cond == 1 && !zeroFlag) || (cond == 2 && carryFlag) || (cond == 3 && !carryFlag)) programCounter = address;
 				else programCounter++;
 				break;
@@ -241,7 +256,7 @@ public partial class Main : Node
 				addressStack.Push(programCounter + 1);
 				programCounter = address;
 				break;
-			case Operand.RET:
+			case Operand.RTN:
 				programCounter = addressStack.Pop();
 				break;
 			case Operand.LOD:
