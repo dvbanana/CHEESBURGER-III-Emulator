@@ -12,7 +12,7 @@ public partial class Main : Node
 	[Export] private int ramSize = 256;
 	[Export] private int portCount = 16; //Subtracted from ram size to get size of port space
 	[Export] private int registerCount = 16;
-	[Export] private int opcodeLength = 4;
+	[Export] private int opcodeLength = 5;
 
 	[ExportCategory("References")]
 	[Export] private Display display;

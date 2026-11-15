@@ -23,7 +23,7 @@ public partial class AssemblyView : CodeEdit
 
 	private List<int> codeLines;
 
-	private List<string> instructions = new List<string> {"NOP", "HLT", "ADD", "SUB", "NOR", "AND", "XOR", "RSH", "LDI", "ADI", "JMP", "BRH", "CAL", "RET", "LOD", "STR", "CMP", "MOV", "LSH", "INC", "DEC", "NOT"};
+	private List<string> instructions = new List<string> {"NOP", "MTU", "biz", "HLT", "ADD", "SUB", "NOR", "AND", "XOR", "RSH", "LDI", "ADI", "JMP", "BRH", "CAL", "RTN", "LOD", "STR", "CMP", "MOV", "LSH", "INC", "DEC", "NOT"};
 	private List<string> conditions = new List<string> {"eq", "ne", "ge", "lt", "=", "!=", ">=", "<", "z", "nz", "c", "nc", "zero", "notzero", "carry", "notcarry"};
 
 	public bool initialized {get; private set;}
