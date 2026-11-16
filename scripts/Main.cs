@@ -71,18 +71,6 @@ public partial class Main : Node
 		ResetButton.ButtonUp -= Reset;
 	}
 
-	public override void _UnhandledInput(InputEvent @event)
-	{
-		if (@event is InputEventKey)
-		{
-			InputEventKey input = @event as InputEventKey;
-			int index = System.Array.IndexOf(inputs, input.AsText());
-			if (index == -1) return;
-			StyleBoxFlat style = InputDisplays[index].GetThemeStylebox("panel") as StyleBoxFlat;
-			style.BgColor = input.Pressed ? PressedInput : ReleasedInput;
-			InputDisplays[index].AddThemeStyleboxOverride("panel", style);
-		}
-	}
 
 	public override void _Process(double delta)
 	{
@@ -188,16 +176,32 @@ public partial class Main : Node
 
 		byte cond = (byte)((instruction & 0b110000000000) >> 10);
 
-		var offset = 0;
 		byte memAddress = 0;
 
 		switch (opcode)
 		{
+			case Operand.IA:
+				registers[regB] = (byte)~(registers[regB]);
+				zeroFlag = registers[regB] == 0;
+				carryFlag = false;
+				programCounter++;
+			break;
+			// I think !A and !B Might be swapped in the assembler 
+			// Spreadsheet says !B is broken so maybe theyre just duplicates That use different parts of ROM.
+
+			case Operand.IB:
+				registers[regC] = (byte)~(registers[regC]);
+				zeroFlag = registers[regC] == 0;
+				carryFlag = false;
+				programCounter++;
+			break;
+			
 			case Operand.NOP: programCounter++; break;
 			case Operand.HLT:
 				if (!paused) StartStop();
 				programCounter = 0;
 				break;
+				
 			case Operand.ADD:
 				carryFlag = (int)registers[regA] + (int)registers[regB] > 255;
 				registers[regC] = (byte)(registers[regA] + registers[regB]);
@@ -205,6 +209,7 @@ public partial class Main : Node
 				//negativeFlag = (registers[dest] & 0b_10000000) == 0b_10000000;
 				programCounter++;
 				break;
+				
 			case Operand.SUB:
 				carryFlag = registers[regA] >= registers[regB];
 				zeroFlag = registers[regA] == registers[regB];
@@ -212,32 +217,85 @@ public partial class Main : Node
 				//negativeFlag = (registers[dest] & 0b_10000000) == 0b_10000000;
 				programCounter++;
 				break;
+				
 			case Operand.NOR:
 				registers[regC] = (byte)~(registers[regA] | registers[regB]);
 				zeroFlag = registers[regC] == 0;
 				carryFlag = false;
 				programCounter++;
 				break;
+				
+				case Operand.OR:
+				registers[regC] = (byte)(registers[regA] | registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				carryFlag = false;
+				programCounter++;
+				break;
+				
 			case Operand.AND:
 				registers[regC] = (byte)(registers[regA] & registers[regB]);
 				zeroFlag = registers[regC] == 0;
 				carryFlag = false;
 				programCounter++;
 				break;
+				
+				case Operand.NAND:
+				registers[regC] = (byte)~(registers[regA] & registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				carryFlag = false;
+				programCounter++;
+				break;
+				
 			case Operand.XOR:
 				registers[regC] = (byte)(registers[regA] ^ registers[regB]);
 				zeroFlag = registers[regC] == 0;
 				carryFlag = false;
 				programCounter++;
 				break;
+				
+				case Operand.XNOR:
+				registers[regC] = (byte)~(registers[regA] ^ registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				carryFlag = false;
+				programCounter++;
+				break;
+				
 			case Operand.RSH:
 				registers[regC] = (byte)(registers[regA] >> 1);
 				programCounter++;
 				break;
+				
+				case Operand.DIV:
+				carryFlag = (int)registers[regA] / (int)registers[regB] > 255;
+				registers[regC] = (byte)(registers[regA] / registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				programCounter++;
+				break;
+				
+				case Operand.MOD:
+				registers[regC] = (byte)(registers[regA] % registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				programCounter++;
+				break;
+				
+				case Operand.SQRT:
+					registers[regC] = (byte)(Math.Sqrt(registers[regA]));
+					zeroFlag = registers[regC] == 0;
+					programCounter++;
+					break;
+				
+				case Operand.MTL:
+				registers[regC] = (byte)(registers[regA] * registers[regB]);
+				zeroFlag = registers[regC] == 0;
+				
+				programCounter++;
+				break;				
+				
 			case Operand.LDI:
 				registers[regA] = immediate;
 				programCounter++;
 				break;
+				
 			case Operand.ADI:
 				carryFlag = (int)registers[regA] + (int)immediate > 255;
 				registers[regA] += immediate;
@@ -245,35 +303,58 @@ public partial class Main : Node
 				//negativeFlag = (registers[dest] & 0b_10000000) == 0b_10000000;
 				programCounter++;
 				break;
+				
 			case Operand.JMP:
 				programCounter = address;
 				break;
+				
 			case Operand.BIZ:
-				if ((cond == 0 && zeroFlag) || (cond == 1 && !zeroFlag) || (cond == 2 && carryFlag) || (cond == 3 && !carryFlag)) programCounter = address;
+				if (zeroFlag) programCounter = address;
 				else programCounter++;
 				break;
+
+			case Operand.BNZ:
+				if (!zeroFlag) programCounter = address;
+				else programCounter++;
+				break;
+
+			case Operand.BIC:
+				if (carryFlag) programCounter = address;
+				else programCounter++;
+				break;
+
+			case Operand.BNC:
+				if (!carryFlag) programCounter = address;
+				else programCounter++;
+				break;
+	
 			case Operand.CAL:
 				addressStack.Push(programCounter + 1);
 				programCounter = address;
 				break;
+				
 			case Operand.RTN:
+				if(addressStack.Count != 0){
 				programCounter = addressStack.Pop();
+				}else{
+					programCounter = 0;
+				}
+				
+				
 				break;
 			case Operand.LOD:
-				offset = (regC & 0b111) + (((regC & 0b1000) >> 3) == 1 ? -8 : 0);
-				memAddress = (byte)(registers[regA] + offset);
-				if (memAddress < ramSize - portCount) registers[regB] = ram[memAddress];
-				else registers[regB] = display.LoadPort(memAddress);
+				memAddress = (byte)(immediate);
+				registers[regA] = ram[memAddress];
 				programCounter++;
 				break;
+				
 			case Operand.STR:
-				offset = (regC & 0b111) + (((regC & 0b1000) >> 3) == 1 ? -8 : 0);
-				memAddress = (byte)(registers[regA] + offset);
-				if (memAddress < ramSize - portCount) ram[memAddress] = registers[regB];
-				else display.StorePort(memAddress, registers[regB]);
+				memAddress = (byte)(immediate);
+				ram[memAddress] = registers[regA];
 				programCounter++;
 				break;
-			default: GD.Print("Invalid opcode in file. This should be impossible."); break;
+				
+			default: GD.Print("Invalid opcode in file. This should be impossible."); if (!paused) StartStop(); break;
 		}
 
 		registers[0] = 0;
@@ -365,7 +446,10 @@ public partial class Main : Node
 		//PortDisplay.Text = text;
 		if (assemblyView.initialized) 
 		{
+			if(programCounter == 0){
 			assemblyView.programCounter = programCounter;
+			}else assemblyView.programCounter = programCounter - 1;
+			
 			assemblyView.MoveCursor();
 		}
 

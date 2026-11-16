@@ -23,7 +23,7 @@ public partial class AssemblyView : CodeEdit
 
 	private List<int> codeLines;
 
-	private List<string> instructions = new List<string> {"NOP", "IA", "IB", "MTU", "biz", "BNZ", "BIC", "BNC", "PST", "PLD", "DIV", "MOD", "SQRT", "HLT", "ADD", "SUB", "NOR", "AND", "NAND", "XOR", "XNOR", "RSH", "LDI", "ADI", "JMP", "CAL", "RTN", "LOD", "STR", "CMP", "MOV", "LSH", "INC", "DEC"};
+	private List<string> instructions = new List<string> {"NOP", "IA", "IB", "MTU", "MTL", "BIZ", "BNZ", "BIC", "BNC", "PST", "PLD", "DIV", "MOD", "SQRT", "HLT", "ADD", "SUB", "OR", "NOR", "AND", "NAND", "XOR", "XNOR", "RSH", "LDI", "ADI", "JMP", "CAL", "RTN", "LOD", "STR", "CMP", "MOV", "LSH", "INC", "DEC"};
 	private List<string> conditions = new List<string> {"eq", "ne", "ge", "lt", "=", "!=", ">=", "<", "z", "nz", "c", "nc", "zero", "notzero", "carry", "notcarry"};
 
 	public bool initialized {get; private set;}
@@ -132,7 +132,7 @@ public partial class AssemblyView : CodeEdit
 		string text = "";
 		codeLines = new List<int>();
 		int lineNum = 0;
-		int pc = 0;
+		int pc = 1;
 		using (StringReader sr = new StringReader(assembly)) {
 			string line;
 			while ((line = sr.ReadLine()) != null) {
