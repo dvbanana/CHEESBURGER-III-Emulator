@@ -12,9 +12,4 @@ Press control+s or f5 to save the assembly code and assemble and load the byteco
 Assembled bytecode is stored in the same directory as the .as file but with a .mc extension.
 
 Controls:
-Make sure text editor is not focused.
-WASD - Up, Left, Down, Right
-T - Select
-Y - Start
-J - B
-K - A
+IO has not been implemented yet
