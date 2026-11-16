@@ -30,7 +30,7 @@ window/vsync/vsync_mode=0
 
 [dotnet]
 
-project/assembly_name="Batpu2 VM"
+project/assembly_name="CHEESBURGER-III-Emulator"
 
 [gui]
 

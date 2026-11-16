@@ -287,7 +287,12 @@ public partial class Main : Node
 				case Operand.MTL:
 				registers[regC] = (byte)(registers[regA] * registers[regB]);
 				zeroFlag = registers[regC] == 0;
+				programCounter++;
+				break;				
 				
+				case Operand.MTU:
+				registers[regC] = (byte)((registers[regA] * registers[regB]) >> 8);
+				zeroFlag = registers[regC] == 0;
 				programCounter++;
 				break;				
 				
